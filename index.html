@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Image Manager</title>
+    <!-- นำเข้าฟอนต์ Kanit จาก Google Fonts เพื่อความสวยงามของภาษาไทย -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- CSS Variables & Themes --- */
+        :root {
+            /* Light Theme (Default) */
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --danger: #ef4444;
+            --success: #22c55e;
+            --transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] {
+            /* Dark Theme */
+            --primary-color: #60a5fa;
+            --primary-hover: #3b82f6;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.5);
+        }
+
+        /* --- Global Reset & Typography --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            transition: background-color 0.3s, color 0.3s;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- Header --- */
+        header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+        }
+
+        /* --- Buttons --- */
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-icon {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-icon:hover {
+            background-color: var(--bg-color);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* --- Main Content --- */
+        main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* --- Upload Section --- */
+        .upload-area {
+            background-color: var(--card-bg);
+            border: 2px dashed var(--border-color);
+            border-radius: 1rem;
+            padding: 3rem;
+            text-align: center;
+            transition: var(--transition);
+            margin-bottom: 2rem;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .upload-area:hover, .upload-area.drag-over {
+            border-color: var(--primary-color);
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+
+        .upload-icon {
+            width: 64px;
+            height: 64px;
+            fill: var(--text-secondary);
+            margin-bottom: 1rem;
+            transition: var(--transition);
+        }
+
+        .upload-area:hover .upload-icon {
+            fill: var(--primary-color);
+            transform: scale(1.1);
+        }
+
+        .upload-text h3 {
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+        }
+
+        .upload-text p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        /* --- Gallery Grid --- */
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .gallery-count {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* --- Image Card --- */
+        .image-card {
+            background-color: var(--card-bg);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            position: relative;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .image-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+
+        .card-img-wrapper {
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+            background-color: #eee;
+            position: relative;
+        }
+
+        .card-img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .image-card:hover .card-img-wrapper img {
+            transform: scale(1.05);
+        }
+
+        .card-actions {
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border-color);
+            background-color: var(--card-bg);
+        }
+
+        .file-name {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 120px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-sm {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-danger {
+            background-color: transparent;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .btn-danger:hover {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-download {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-download:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        /* --- Empty State --- */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+            display: none;
+        }
+
+        /* --- Footer --- */
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border-color);
+            background-color: var(--card-bg);
+            margin-top: auto;
+        }
+
+        /* --- Toast Notification --- */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background-color: var(--card-bg);
+            color: var(--text-main);
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid var(--primary-color);
+            animation: slideIn 0.3s ease-out;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 250px;
+        }
+
+        .toast.success { border-left-color: var(--success); }
+        .toast.error { border-left-color: var(--danger); }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* SVG Icon styling helper */
+        svg {
+            pointer-events: none;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 600px) {
+            header {
+                padding: 1rem;
+            }
+            .controls span {
+                display: none; /* Hide text on small screens, show icons only */
+            }
+            .logo span {
+                display: none; /* Show only icon logo on very small screens */
+            }
+            main {
+                padding: 1rem;
+            }
+            .upload-area {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+            <span data-i18n="appTitle">Image Vault</span>
+        </div>
+        <div class="controls">
+            <!-- Language Switcher -->
+            <button class="btn btn-icon" id="lang-btn" title="Switch Language">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                </svg>
+                <span id="lang-text">TH</span>
+            </button>
+
+            <!-- Theme Switcher -->
+            <button class="btn btn-icon" id="theme-btn" title="Toggle Theme">
+                <!-- Sun Icon -->
+                <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <!-- Moon Icon -->
+                <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Upload Section -->
+        <section class="upload-area" id="drop-zone">
+            <input type="file" id="file-input" accept="image/*" multiple>
+            <svg class="upload-icon" viewBox="0 0 24 24">
+                <path d="M21.2 15c.7-1.2 1-2.5 1-3.9 0-4.4-3.6-8-8-8-2.9 0-5.5 1.6-6.9 4-2.8.3-5 2.7-5 5.5 0 3 2.5 5.5 5.5 5.5h12c2.5 0 4.5-2 4.5-4.5 0-1.5-.8-2.9-2.1-3.6zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+            </svg>
+            <div class="upload-text">
+                <h3 data-i18n="uploadTitle">คลิกหรือลากไฟล์รูปภาพมาวางที่นี่</h3>
+                <p data-i18n="uploadSubtitle">รองรับไฟล์ JPG, PNG, GIF</p>
+            </div>
+        </section>
+
+        <!-- Gallery Section -->
+        <section class="gallery-section">
+            <div class="gallery-header">
+                <h2 data-i18n="galleryTitle">รูปภาพของฉัน</h2>
+                <span class="gallery-count" id="image-count">0 images</span>
+            </div>
+            
+            <div class="image-grid" id="gallery-grid">
+                <!-- Images will be injected here via JS -->
+            </div>
+
+            <div class="empty-state" id="empty-state">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 1rem; color: var(--text-secondary);">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                <p data-i18n="emptyState">ยังไม่มีรูปภาพในห้องเก็บของ</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2023 Image Vault. <span data-i18n="footerText">Designed for Efficiency.</span></p>
+    </footer>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        // --- Configuration & State ---
+        const state = {
+            lang: 'th', // 'th' or 'en'
+            theme: 'light', // 'light' or 'dark'
+            images: []
+        };
+
+        // --- Translations ---
+        const translations = {
+            th: {
+                appTitle: "คลังรูปภาพ",
+                uploadTitle: "คลิกหรือลากไฟล์รูปภาพมาวางที่นี่",
+                uploadSubtitle: "รองรับไฟล์ JPG, PNG, GIF",
+                galleryTitle: "รูปภาพของฉัน",
+                emptyState: "ยังไม่มีรูปภาพในห้องเก็บของ",
+                footerText: "ออกแบบมาเพื่อประสิทธิภาพสูงสุด",
+                countText: "รูปภาพ",
+                btnDownload: "ดาวน์โหลด",
+                btnDelete: "ลบ",
+                toastUploadSuccess: "อัปโหลดรูปภาพสำเร็จ",
+                toastDeleteSuccess: "ลบรูปภาพแล้ว",
+                toastDownloadStart: "กำลังดาวน์โหลด..."
+            },
+            en: {
+                appTitle: "Image Vault",
+                uploadTitle: "Click or Drag images here",
+                uploadSubtitle: "Supports JPG, PNG, GIF",
+                galleryTitle: "My Gallery",
+                emptyState: "No images in the vault yet",
+                footerText: "Designed for Efficiency.",
+                countText: "images",
+                btnDownload: "Download",
+                btnDelete: "Delete",
+                toastUploadSuccess: "Upload successful",
+                toastDeleteSuccess: "Image deleted",
+                toastDownloadStart: "Downloading..."
+            }
+        };
+
+        // --- DOM Elements ---
+        const langBtn = document.getElementById('lang-btn');
+        const langText = document.getElementById('lang-text');
+        const themeBtn = document.getElementById('theme-btn');
+        const fileInput = document.getElementById('file-input');
+        const dropZone = document.getElementById('drop-zone');
+        const galleryGrid = document.getElementById('gallery-grid');
+        const emptyState = document.getElementById('empty-state');
+        const imageCountLabel = document.getElementById('image-count');
+        const iconSun = document.querySelector('.icon-sun');
+        const iconMoon = document.querySelector('.icon-moon');
+
+        // --- Initialization ---
+        function init() {
+            renderLanguage();
+            renderTheme();
+            updateEmptyState();
+        }
+
+        // --- Language Handling ---
+        langBtn.addEventListener('click', () => {
+            state.lang = state.lang === 'th' ? 'en' : 'th';
+            langText.textContent = state.lang.toUpperCase();
+            renderLanguage();
+        });
+
+        function renderLanguage() {
+            const t = translations[state.lang];
+            
+            // Update static text
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (t[key]) el.textContent = t[key];
+            });
+
+            // Update dynamic text
+            updateGalleryText();
+            updateCountText();
+        }
+
+        function t(key) {
+            return translations[state.lang][key];
+        }
+
+        // --- Theme Handling ---
+        themeBtn.addEventListener('click', () => {
+            state.theme = state.theme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', state.theme);
+            renderTheme();
+        });
+
+        function renderTheme() {
+            if (state.theme === 'dark') {
+                iconSun.style.display = 'block';
+                iconMoon.style.display = 'none';
+            } else {
+                iconSun.style.display = 'none';
+                iconMoon.style.display = 'block';
+            }
+        }
+
+        // --- File Handling (Upload) ---
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+            fileInput.value = ''; // Reset input to allow uploading same file again if needed
+        });
+
+        function handleFiles(files) {
+            if (files.length === 0) return;
+
+            Array.from(files).forEach(file => {
+                if (!file.type.startsWith('image/')) {
+                    showToast('File is not an image', 'error');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const imageData = {
+                        id: Date.now() + Math.random(),
+                        name: file.name,
+                        src: e.target.result,
+                        size: (file.size / 1024).toFixed(1) + ' KB'
+                    };
+                    state.images.unshift(imageData); // Add to beginning
+                    addImageToGrid(imageData);
+                    updateCountText();
+                    updateEmptyState();
+                    showToast(t('toastUploadSuccess'), 'success');
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // --- Gallery Management ---
+        function addImageToGrid(imageData) {
+            const card = document.createElement('div');
+            card.className = 'image-card';
+            card.id = `img-${imageData.id}`;
+
+            // Create download link logic
+            // Note: Since this is client-side only, we create a blob link for download
+            const downloadAction = `downloadImage('${imageData.id}')`;
+            const deleteAction = `deleteImage('${imageData.id}')`;
+
+            card.innerHTML = `
+                <div class="card-img-wrapper">
+                    <img src="${imageData.src}" alt="${imageData.name}" loading="lazy">
+                </div>
+                <div class="card-actions">
+                    <div class="file-name" title="${imageData.name}">${imageData.name}</div>
+                    <div class="action-buttons">
+                        <button class="btn btn-sm btn-download" onclick="${downloadAction}" aria-label="Download">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span class="btn-dl-text">${t('btnDownload')}</span>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="${deleteAction}" aria-label="Delete">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Insert at the top of the grid
+            galleryGrid.prepend(card);
+        }
+
+        // Exposed to global scope for inline onclick events
+        window.deleteImage = function(id) {
+            const el = document.getElementById(`img-${id}`);
+            if (el) {
+                // Animate removal
+                el.style.transform = 'scale(0.9)';
+                el.style.opacity = '0';
+                setTimeout(() => {
+                    el.remove();
+                    state.images = state.images.filter(img => img.id !== id);
+                    updateCountText();
+                    updateEmptyState();
+                    showToast(t('toastDeleteSuccess'), 'success');
+                }, 300);
+            }
+        };
+
+        window.downloadImage = function(id) {
+            const imgData = state.images.find(img => img.id === parseFloat(id));
+            if (imgData) {
+                const a = document.createElement('a');
+                a.href = imgData.src;
+                a.download = imgData.name;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                showToast(t('toastDownloadStart'), 'success');
+            }
+        };
+
+        // --- Helper Functions ---
+        function updateCountText() {
+            const count = state.images.length;
+            const text = `${count} ${t('countText')}`;
+            imageCountLabel.textContent = text;
+        }
+
+        function updateGalleryText() {
+            // Update button text inside cards when language changes
+            document.querySelectorAll('.btn-dl-text').forEach(el => {
+                el.textContent = t('btnDownload');
+            });
+        }
+
+        function updateEmptyState() {
+            if (state.images.length === 0) {
+                emptyState.style.display = 'block';
+                galleryGrid.style.display = 'none';
+            } else {
+                emptyState.style.display = 'none';
+                galleryGrid.style.display = 'grid';
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            // Icon based on type
+            let icon = '';
+            if(type === 'success') icon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+            else icon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+
+            toast.innerHTML = `${icon}<span>${message}</span>`;
+            
+            const container = document.getElementById('toast-container');
+            container.appendChild(toast);
+
+            // Remove after 3 seconds
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Start
+        init();
+
+    </script>
+</body>
+</html>
