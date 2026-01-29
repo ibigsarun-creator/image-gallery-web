@@ -1,1 +1,2 @@
-image-gallery-web
+About
+ibk-image-gallery-web
